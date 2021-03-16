@@ -1,2 +1,6 @@
 .env
 vendor/*
+*.json
+!/composer.json
+.DS_Store
+*Test.*

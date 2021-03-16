@@ -1,5 +1,6 @@
 {
     "require": {
-        "rtheunissen/oauth2-reddit": "^2.0"
+        "rtheunissen/oauth2-reddit": "^2.0",
+        "symfony/dotenv": "^5.2"
     }
 }
