@@ -12,7 +12,7 @@ from datetime import datetime as dt
 subreddit="shitWehraboosSay"
 limit=100000
 workers=(os.cpu_count()*4)-2
-months=3
+months=36
 
 start = dt.strptime(dt.today().strftime("%Y%m"), "%Y%m")
 
