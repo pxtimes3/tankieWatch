@@ -9,7 +9,7 @@ services:
     ports:
       - 3307:3306
     volumes:
-      - ./mysql:/var/lib/mysql
+      - ./mysql:/var/lib/mysql:delegated
     environment:
       MYSQL_ROOT_PASSWORD: example
 
