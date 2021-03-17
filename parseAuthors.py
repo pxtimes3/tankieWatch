@@ -1,25 +1,29 @@
 import json
 import os
-import mysql.connector
+from mysql.connector import connect, Error
+from datetime import datetime as dt
 from dotenv import load_dotenv
 load_dotenv()
 
-print(os.getenv("TEST"))
-
-db = mysql.connector.connect(
-  host=os.getenv("DB_HOST"),
-  user=os.getenv("DB_USER"),
-  port=os.getenv("DB_PORT"),
-  password=os.getenv("DB_PASS"),
-  database="tankieWatch"
-)
+try:
+    with connect(
+        host=os.getenv("DB_HOST"),
+  		user=os.getenv("DB_USER"),
+  		port=os.getenv("DB_PORT"),
+  		password=os.getenv("DB_PASS"),
+        database="tankieWatch"
+    ) as connection:
+        print("Connected to db: tankieWatch")
+except Error as e:
+    print(e)
 
 bannedAuthors = ["AutoModerator", "[deleted]", "SnapshillBot"]
 uniqueAuthors = {}
 
-directory = r'.'
+directory = r'./json'
+ext = ["comments.json", "posts.json"]
 for entry in os.scandir(directory):
-    if (entry.path.endswith("shitWehraboosSay.json")):
+    if (entry.path.endswith(tuple(ext))):
         file = entry.path
 
         with open(file) as f:
@@ -36,9 +40,14 @@ for entry in os.scandir(directory):
 
 uniqueAuthors = sorted(uniqueAuthors.items(), key=lambda x:x[0], reverse=False)
 
+connection.reconnect()
 for i in uniqueAuthors:
-	print(i[0], i[1])
+	#print(i[0], i[1])
+	insertAuthorQuery = f'INSERT INTO authors (author, updated) VALUES ("{i[0]}", from_unixtime({int(dt.today().timestamp())})) ON DUPLICATE KEY UPDATE id=id;'
+	
+	with connection.cursor() as cursor:
+	    cursor.execute(insertAuthorQuery)
+	    connection.commit()
 
 
-
-print(f'Total # of comment authors: {len(uniqueAuthors)}')
+print(f'Total # of authors: {len(uniqueAuthors)}')
