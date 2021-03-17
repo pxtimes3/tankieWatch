@@ -21,9 +21,9 @@ bannedAuthors = ["AutoModerator", "[deleted]", "SnapshillBot"]
 uniqueAuthors = {}
 
 directory = r'./json'
-ext = ["comments.json", "posts.json"]
+#ext = ("comments.json", "posts.json")
 for entry in os.scandir(directory):
-    if (entry.path.endswith(tuple(ext))):
+    if (entry.path.endswith(".json")):
         file = entry.path
 
         with open(file) as f:
@@ -43,7 +43,12 @@ uniqueAuthors = sorted(uniqueAuthors.items(), key=lambda x:x[0], reverse=False)
 connection.reconnect()
 for i in uniqueAuthors:
 	#print(i[0], i[1])
-	insertAuthorQuery = f'INSERT INTO authors (author, updated) VALUES ("{i[0]}", from_unixtime({int(dt.today().timestamp())})) ON DUPLICATE KEY UPDATE id=id;'
+	insertAuthorQuery = f'''
+    INSERT INTO authors (author, updated) 
+    VALUES ("{i[0]}", from_unixtime({int(dt.today().timestamp())})) 
+    ON DUPLICATE KEY 
+    UPDATE id=id;
+    '''
 	
 	with connection.cursor() as cursor:
 	    cursor.execute(insertAuthorQuery)
