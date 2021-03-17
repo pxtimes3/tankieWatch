@@ -4,3 +4,4 @@ json/*
 !composer.json
 .DS_Store
 *Test.*
+mysql/**
