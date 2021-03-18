@@ -9,7 +9,7 @@ try:
     with pymysql.connect(
         host=os.getenv("DB_HOST"),
   		user=os.getenv("DB_USER"),
-  		port=os.getenv("DB_PORT"),
+  		port=int(os.getenv("DB_PORT")),
   		password=os.getenv("DB_PASS"),
         database="tankieWatch"
     ) as connection:
@@ -17,7 +17,7 @@ try:
 except pymysql.Error as e:
     print(e)
 
-bannedAuthors = ["AutoModerator", "[deleted]", "SnapshillBot"]
+bannedAuthors = ["AutoModerator", "[deleted]", "SnapshillBot", "BadDadBot"]
 uniqueAuthors = {}
 
 directory = r'./json'
