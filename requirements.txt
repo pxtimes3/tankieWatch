@@ -1,6 +1,7 @@
 #### REQ ####
-mysql-connector-python
+# mysql-connector-python
 python-dotenv
 datetime
 pandas
 pmaw
+pymysql
