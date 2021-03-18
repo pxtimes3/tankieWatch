@@ -1,12 +1,12 @@
 import json
 import os
-from mysql.connector import connect, Error
+import pymysql
 from datetime import datetime as dt
 from dotenv import load_dotenv
 load_dotenv()
 
 try:
-    with connect(
+    with pymysql.connect(
         host=os.getenv("DB_HOST"),
   		user=os.getenv("DB_USER"),
   		port=os.getenv("DB_PORT"),
@@ -14,7 +14,7 @@ try:
         database="tankieWatch"
     ) as connection:
         print("Connected to db: tankieWatch")
-except Error as e:
+except pymysql.Error as e:
     print(e)
 
 bannedAuthors = ["AutoModerator", "[deleted]", "SnapshillBot"]
@@ -40,7 +40,7 @@ for entry in os.scandir(directory):
 
 uniqueAuthors = sorted(uniqueAuthors.items(), key=lambda x:x[0], reverse=False)
 
-connection.reconnect()
+connection.ping(reconnect=True)
 for i in uniqueAuthors:
 	#print(i[0], i[1])
 	insertAuthorQuery = f'''

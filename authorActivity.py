@@ -3,22 +3,23 @@ import random
 from datetime import datetime as dt
 import json
 import os
+import pymysql
 from pmaw import PushshiftAPI
-api = PushshiftAPI()
-from mysql.connector import connect, Error
 from dotenv import load_dotenv
+
+api = PushshiftAPI()
 load_dotenv()
 
 limit = 100000
-userlimit = 1000
+userlimit = 0
 n = 0
-graceDays = 7
+graceDays = 14
 
 try:
-	with connect(
+	with pymysql.connect(
 		host=os.getenv("DB_HOST"),
 		user=os.getenv("DB_USER"),
-		port=os.getenv("DB_PORT"),
+		port=int(os.getenv("DB_PORT")),
 		password=os.getenv("DB_PASS"),
 		database="tankieWatch"
 	) as connection:
@@ -27,7 +28,7 @@ try:
 			cursor.execute("SELECT id,author FROM authors")
 			result = cursor.fetchall()
 
-except Error as e:
+except pymysql.Error as e:
 	print(e)
 
 def countEntityPerSub(jsonStr):
@@ -45,7 +46,7 @@ def countEntityPerSub(jsonStr):
 def insertActivity(authorDict, author_id):
 	#print(f'got {author_id} as author_id')
 	try:
-		connection.reconnect()
+		connection.ping(reconnect=True)
 		#print("Connected to db: tankieWatch")
 		with connection.cursor() as cursor:
 			# try:
@@ -74,14 +75,15 @@ def insertActivity(authorDict, author_id):
 					exit()
 				else:
 					print(f'Processed author_id {author_id}. {result} rows affected.')
-			except Error as e:
+			except pymysql.Error as e:
 				print(e)
-	except Error as e:
+	except pymysql.Error as e:
 		print(e)
 
 for i in result:
-	if n == userlimit:
+	if n == userlimit and userlimit != 0:
 		break
+
 	author = i[1]
 	author_id = i[0]
 
@@ -90,7 +92,7 @@ for i in result:
 		"comments" : {},
 	}
 
-	connection.reconnect()
+	connection.ping(reconnect=True)
 	#print("Connected to db: tankieWatch")
 	with connection.cursor() as cursor:
 		try:
@@ -102,7 +104,7 @@ for i in result:
 				delta = dt.now() - updated
 			else:
 				delta = False
-		except Error as e:
+		except pymysql.Error as e:
 			print(e)
 	
 	if delta == False or delta.days > graceDays:
