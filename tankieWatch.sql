@@ -6,6 +6,10 @@ SET foreign_key_checks = 0;
 
 SET NAMES utf8mb4;
 
+DROP DATABASE IF EXISTS `tankieWatch`;
+CREATE DATABASE `tankieWatch` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+USE `tankieWatch`;
+
 DROP TABLE IF EXISTS `activity`;
 CREATE TABLE `activity` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -38,4 +42,4 @@ CREATE TABLE `subreddits` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
--- 2021-03-18 19:09:39
+-- 2021-03-19 16:05:27
