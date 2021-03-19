@@ -5,34 +5,100 @@ from datetime import datetime as dt
 from dotenv import load_dotenv
 load_dotenv()
 
-subreddits={}
+postWeight=int(os.getenv("POSTWEIGHT"))
+commWeight=int(os.getenv("COMMWEIGHT"))
+
+def connectToDb():
+    connection = pymysql.connect(
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        port=int(os.getenv("DB_PORT")),
+        password=os.getenv("DB_PASS"),
+        database="tankieWatch"
+    )
+    print("Connected to db: tankieWatch")
+    return connection
 
 def fetchSubreddits():
     try:
-        with pymysql.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            port=int(os.getenv("DB_PORT")),
-            password=os.getenv("DB_PASS"),
-            database="tankieWatch"
-        ) as connection:
-            print("Connected to db: tankieWatch")
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT name,weight FROM subreddits")
-                result = cursor.fetchall()
+        subreddits={}
+        connection.ping(reconnect=True)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT name,weight FROM subreddits")
+            result = cursor.fetchall()
+        for i in result:
+            subreddits[i[0]] = i[1]
+        return subreddits
     except pymysql.Error as e:
 	    print(e)
+    return False
+
+def fetchActivityData():
+    try:
+        connection.ping(reconnect=True)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT author_id, activity FROM activity")
+            result = cursor.fetchall()
+            return result
+    except pymysql.Error as e:
+        print(e)
     
-    for i in result:
-        print(i)
 
-def fetchActivityData(author_id):
-    pass
+def gradeAuthor(authorData, subreddits):
+    #print(type(authorData))
+    postscore=0
+    commscore=0
+    
+    authorId = authorData[0]
+    try:
+        authorActivity = json.loads(authorData[1])
+    except ValueError as e:
+        print(authorData[1])
+        print(json.loads(authorData[1]["comments"]))
+        print(e)
+        exit()
 
-def gradeAuthor(author_id, type):
-    pass
+    if "posts" in authorActivity.keys():
+        for i in authorActivity['posts'].keys():
+            if i.lower() in subreddits:
+                weight = subreddits[i.lower()]
+                instances = authorActivity['posts'][i]
+                postscore = postscore + ((instances * weight) * postWeight)
+    if "comments" in authorActivity.keys():
+        for i in authorActivity['comments'].keys():
+            if i.lower() in subreddits:
+                weight = subreddits[i.lower()]
+                instances = authorActivity['comments'][i]
+                commscore = commscore + ((instances * weight) * commWeight)
+    grade = postscore + commscore
+    saveAuthorGrade(authorId, grade)
 
 def saveAuthorGrade(author_id, grade):
-    pass
+    connection.ping(reconnect=True)
+    with connection.cursor() as cursor:
+        try:
+            query = '''
+            INSERT INTO authorGrades (author_id, grade, updated) VALUES (%s, %s, CURRENT_TIMESTAMP) 
+            ON DUPLICATE KEY UPDATE grade=%s, updated=CURRENT_TIMESTAMP
+            '''
+            updated = dt.today().timestamp()
+            cursor.execute(query, (author_id, grade, grade))
+            connection.commit()
+            result = cursor.rowcount
 
-fetchSubreddits()
+            if (result == 0):
+                print("Something went wrong. Query was:")
+                print(query)
+                exit()
+            else:
+                print(f'Graded author_id: {author_id}, grade: {grade}. {result} rows affected.')
+        except pymysql.Error as e:
+            print(e)
+            print(query)
+
+connection = connectToDb()
+subreddits = fetchSubreddits()
+activityData = fetchActivityData()
+
+for i in activityData:
+    gradeAuthor(i, subreddits)
