@@ -109,7 +109,7 @@ for i in result:
 	else:
 		delta = dt.now() - updatedDict[author_id]
 	
-	if delta == False or delta.days > graceDays or author not in bannedAuthors:
+	if delta == False or delta.days > graceDays and author not in bannedAuthors:
 
 		print(f'Fetching posts for: {author}')
 		posts = api.search_submissions(author=author, limit=limit, fields=['id','author','subreddit'])
