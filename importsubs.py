@@ -24,26 +24,30 @@ try:
 		with open('startsubs.json') as f:
 			data = json.load(f)
 			for i in data:
-				# exists?
-				if i in subreddits:
-					if data[i] != subreddits[i]:
-						print(f'Weight change for {i}. From {subreddits[i]} to {data[i]}')
-					
-						query = f'''
-						INSERT INTO subreddits (name, weight, updated) VALUES ("{i}", {data[i]}, from_unixtime({int(dt.today().timestamp())})) 
-						ON DUPLICATE KEY 
-						UPDATE updated=from_unixtime({int(dt.today().timestamp())}), weight={data[i]};
-						'''
+				
+				subreddit=i.strip()
+				if data[i] != subreddits[i]:
+					print(f'Weight change for {i}. From {subreddits[i]} to {data[i]}')
+			
+					query = f'''
+					INSERT INTO subreddits (name, weight, updated) VALUES ("{i}", {data[i]}, from_unixtime({int(dt.today().timestamp())})) 
+					ON DUPLICATE KEY 
+					UPDATE updated=from_unixtime({int(dt.today().timestamp())}), weight={data[i]}, name="{subreddit}";
+					'''
 
-						with connection.cursor() as cursor:
+					with connection.cursor() as cursor:
+						try:
 							cursor.execute(query)
 							result = cursor.rowcount
+							
 							connection.commit()
-							if result > 1:
-								print(f'Updated {i}, {data[i]}')
-							elif result == 1:
-								print(f'Added {i}, {data[i]}')
-							else:
-								print(f'Failed {i}, {data[i]}')
+							# if result > 1:
+							# 	print(f'Updated {i}, {data[i]}')
+							# elif result == 1:
+							# 	print(f'Added {i}, {data[i]}')
+							# else:
+							# 	print(f'Failed {i}, {data[i]}')
+						except pymysql.Error as e:
+							print(query,e)
 except pymysql.Error as e:
 	print(e)
