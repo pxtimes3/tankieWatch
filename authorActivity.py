@@ -11,9 +11,9 @@ from dotenv import load_dotenv
 api = PushshiftAPI()
 load_dotenv()
 
-limit = os.getenv("LIMIT")
-userlimit =  os.getenv("USERLIMIT")
-graceDays =  os.getenv("GRACEDAYS")
+limit = int(os.getenv("LIMIT"))
+userlimit =  int(os.getenv("USERLIMIT"))
+graceDays =  int(os.getenv("GRACEDAYS"))
 n = 0
 
 start = time.time()
