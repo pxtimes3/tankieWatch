@@ -64,25 +64,32 @@ def gradeAuthor(authorData, subreddits):
                 weight = subreddits[i.lower()]
                 instances = authorActivity['posts'][i]
                 postscore = postscore + ((instances * weight) * postWeight)
+    #            print(postscore)
+    #else:
+    #    print("No posts found!")
+
     if "comments" in authorActivity.keys():
         for i in authorActivity['comments'].keys():
             if i.lower() in subreddits:
                 weight = subreddits[i.lower()]
                 instances = authorActivity['comments'][i]
                 commscore = commscore + ((instances * weight) * commWeight)
+    #            print(commscore)
+    #else:
+    #    print("No comments found!")
     grade = postscore + commscore
-    saveAuthorGrade(authorId, grade)
+    saveAuthorGrade(authorId, grade, postscore, commscore)
 
-def saveAuthorGrade(author_id, grade):
+def saveAuthorGrade(author_id, grade, postscore, commscore):
     connection.ping(reconnect=True)
     with connection.cursor() as cursor:
         try:
             query = '''
-            INSERT INTO authorGrades (author_id, grade, updated) VALUES (%s, %s, CURRENT_TIMESTAMP) 
-            ON DUPLICATE KEY UPDATE grade=%s, updated=CURRENT_TIMESTAMP
+            INSERT INTO authorGrades (author_id, grade, postscore, commscore, updated) VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP) 
+            ON DUPLICATE KEY UPDATE grade=%s, postscore=%s, commscore=%s, updated=CURRENT_TIMESTAMP
             '''
             updated = dt.today().timestamp()
-            cursor.execute(query, (author_id, grade, grade))
+            cursor.execute(query, (author_id, grade, int(postscore), int(commscore), grade, int(postscore), int(commscore)))
             connection.commit()
             result = cursor.rowcount
 
@@ -91,7 +98,7 @@ def saveAuthorGrade(author_id, grade):
                 print(query)
                 exit()
             else:
-                print(f'Graded author_id: {author_id}, grade: {grade}. {result} rows affected.')
+                print(f'Graded author_id: {author_id}, grade: {grade} ({postscore}/{commscore}). {result} rows affected.')
         except pymysql.Error as e:
             print(e)
             print(query)
@@ -100,5 +107,9 @@ connection = connectToDb()
 subreddits = fetchSubreddits()
 activityData = fetchActivityData()
 
+n=0
 for i in activityData:
     gradeAuthor(i, subreddits)
+    #n = n + 1
+    #if n > 10:
+    #    break
