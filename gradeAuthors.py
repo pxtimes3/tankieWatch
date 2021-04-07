@@ -27,7 +27,8 @@ def fetchSubreddits():
             cursor.execute("SELECT name,weight FROM subreddits")
             result = cursor.fetchall()
         for i in result:
-            subreddits[i[0]] = i[1]
+            name = i[0].strip()
+            subreddits[name] = i[1]
         return subreddits
     except pymysql.Error as e:
 	    print(e)
